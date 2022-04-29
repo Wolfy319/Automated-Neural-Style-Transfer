@@ -71,30 +71,107 @@ def GramMatrix(input) :
   gram = torch.mm(input, input.t())
   return gram.div(a*b*c*d)
 
-def buildModel(mean, std) :
-	# initialize empty model and add normalization layer
-	normalize = Normalization(mean, std)
-	model = nn.Sequential(normalize)
-	model.add_module("normal", normalize)
+def buildModel(cnn, mean, std, contentImage, styleImage, contentLayers, styleLayers) :
+  cnn = cnn
+  # initialize empty model and add normalization layer
+  normalize = Normalization(mean, std)
+  model = nn.Sequential(normalize)
+  model.add_module("normal", normalize)
 
-	contentLosses = []
-	styleLosses = []
-	i = 1
-	j = 0
-	# iterate through vgg layers and add to model
-	for layer in cnn.children() :
-		if isinstance(layer, nn.Conv2d) :
-			j += 1
-			name = "conv_{}_{}".format(i,j)
-		# replace inplace ReLU with not-inplace ReLU
-		if isinstance(layer, nn.ReLU) :
-			name = "relu_{}_{}".format(i,j)
-			layer = nn.ReLU(inplace=False)
-		# replace MaxPool2d with AvgPool2d for better image results
-		if isinstance(layer, nn.MaxPool2d) :
-			name = "avgpool_{}_{}".format(i,j)
-			layer = nn.AvgPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
-		model.add_module(name, layer)
+  contentLosses = []
+  styleLosses = []
+  i = 1
+  j = 0
+  # iterate through vgg layers and add to model
+  for layer in cnn.children() :
+    if isinstance(layer, nn.Conv2d) :
+      j += 1
+      name = "conv_{}_{}".format(i,j)
+    # replace inplace ReLU with not-inplace ReLU
+    elif isinstance(layer, nn.ReLU) :
+      name = "relu_{}".format(i)
+      layer = nn.ReLU(inplace=False)
+    # replace MaxPool2d with AvgPool2d for better image results
+    elif isinstance(layer, nn.MaxPool2d) :
+      name = "avgpool_{}".format(i)
+      layer = nn.AvgPool2d(kernel_size=2, stride=2, padding=0)
+      i += 1
+      j = 0
+    model.add_module(name, layer)
+
+    # add content loss module after a content layer
+    if name in contentLayers :
+      name = "content_loss_{}".format(i)
+      target = model(contentImage).detach()
+      contentLoss = ContentLoss(target)
+      model.add_module(name, contentLoss)
+      contentLosses.append(contentLoss)
+    # add style loss module after a style layer
+    elif name in styleLayers :
+      name = "style_loss_{}".format(i)
+      target = model(styleImage).detach()
+      styleLoss = StyleLoss(target)
+      model.add_module(name, styleLoss)
+
+    # find the last loss module
+    for i in range(len(model) - 1, -1, -1) :
+      if isinstance(model[i], ContentLoss) or isinstance(model[i], StyleLoss) :
+        break
+    
+    # remove any layers after the last loss layer
+    model = model[:(i+1)]
+
+    return model, contentLosses, styleLosses
+
+  
+def runModel(inputImg, contentImg, styleImg, contentLayers, styleLayers, numSteps, styleWeight, contentWeight) :
+  # build nst model
+  model, cLosses, sLosses = buildModel(cnn, cnn_normalization_mean, cnn_normalization_std, contentImg, styleImg, contentLayers, styleLayers)
+  model.requires_grad_(False)
+  inputImg.requires_grad_(True)
+
+  # initialize optimizer
+  optimizer = optim.Adam([inputImg])
+
+  # "training" loop
+  for step in range(numSteps) :
+    with torch.no_grad() :
+      inputImg.clamp_(0,1)
+
+    optimizer.zero_grad()
+    # put input through model
+    model(inputImg)
+
+    totalContentLoss = 0
+    totalStyleLoss = 0
+
+    # sum the total content and style loss, and factor in weights
+    for cLoss in cLosses :
+      totalContentLoss += cLoss.loss
+    for sLoss in sLosses :
+      totalStyleLoss += sLoss.loss
+
+    totalContentLoss *= contentWeight
+    totalStyleLoss *= styleWeight
+
+    totalLoss = totalContentLoss + totalStyleLoss
+    totalLoss.backward()
+
+    # output progress
+    step += 1
+    if step % 50 == 0 :
+      print("Step {}".format(step))
+      print('Style Loss : {:4f} Content Loss: {:4f}'.format(
+                    totalStyleLoss.item(), totalContentLoss.item()))
+      print()
+
+    # optimize
+    optimizer.step(totalLoss)
+
+  with torch.no_grad() :
+    inputImg.clamp_(0,1)
+  
+  return inputImg
 
 # set up gpu/cpu
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -106,10 +183,16 @@ cnn_normalization_std = torch.tensor([0.229, 0.224, 0.225])
 # initialize vgg model
 cnn = models.vgg19(pretrained=True).features.to(device).eval()
 
+contentLayers = ["conv_4_2"]
+styleLayers = ["conv_1_1", "conv_2_1", "conv_3_1", "conv_4_1", "conv_5_1"]
 
 
+# load images
 style_img = image_loader("/content/points.jpg")
 content_img = image_loader("/content/bird.jpg")
+inputImg = content_img.clone()
+
+output = runModel(inputImg, content_img, style_img, contentLayers, styleLayers, numSteps=300, styleWeight=1000000, contentWeight=1)
 
 plt.ion()
 
