@@ -12,6 +12,16 @@ import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 import torchvision.models as models
 
+# calculates the loss between an input image and a style image
+class StyleLoss(nn.Module) :
+  def __init__(self, target) :
+    super(StyleLoss, self).__init__()
+    self.target = GramMatrix(target).detach()
+
+  def forward(self, input) :
+    self.loss = F.l1_loss(GramMatrix(input), self.target)
+    return input
+
 # calculates the loss between an input image and a content image
 class ContentLoss(nn.Module) :
   def __init__(self, target) :
@@ -55,6 +65,10 @@ def imshow(input, title) :
   plt.imshow(image)
   plt.title(title)
 
+def GramMatrix(input) :
+  a,b,c,d = input.size()
+  input = input.view(a*b, c*d)
+  
 # set up gpu/cpu
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
