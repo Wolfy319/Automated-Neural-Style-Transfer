@@ -108,8 +108,8 @@ cnn = models.vgg19(pretrained=True).features.to(device).eval()
 
 
 
-style_img = image_loader("/content/crazy.jpg")
-content_img = image_loader("/content/mountains.jpg")
+style_img = image_loader("/content/points.jpg")
+content_img = image_loader("/content/bird.jpg")
 
 plt.ion()
 
