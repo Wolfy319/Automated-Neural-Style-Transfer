@@ -15,6 +15,15 @@ class Normalization(nn.Module) :
     super(Normalization, self).__init__()
     self.mean = torch.tensor(mean).view(-1,1,1)
     self.std = torch.tensor(std).view(-1,1,1)
+
+def forward(self, img) :
+    print("Before")
+    print(img)
+    print("After")
+    print((img - self.mean) / self.std)
+
+    return (img - self.mean) / self.std
+
 	
 class ContentLoss(nn.Module) :
   def __init__(self, target) :
