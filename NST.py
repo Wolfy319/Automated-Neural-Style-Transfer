@@ -68,7 +68,34 @@ def imshow(input, title) :
 def GramMatrix(input) :
   a,b,c,d = input.size()
   input = input.view(a*b, c*d)
-  
+  gram = torch.mm(input, input.t())
+  return gram.div(a*b*c*d)
+
+def buildModel(mean, std) :
+	# initialize empty model and add normalization layer
+	normalize = Normalization(mean, std)
+	model = nn.Sequential(normalize)
+	model.add_module("normal", normalize)
+
+	contentLosses = []
+	styleLosses = []
+	i = 1
+	j = 0
+	# iterate through vgg layers and add to model
+	for layer in cnn.children() :
+		if isinstance(layer, nn.Conv2d) :
+			j += 1
+			name = "conv_{}_{}".format(i,j)
+		# replace inplace ReLU with not-inplace ReLU
+		if isinstance(layer, nn.ReLU) :
+			name = "relu_{}_{}".format(i,j)
+			layer = nn.ReLU(inplace=False)
+		# replace MaxPool2d with AvgPool2d for better image results
+		if isinstance(layer, nn.MaxPool2d) :
+			name = "avgpool_{}_{}".format(i,j)
+			layer = nn.AvgPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+		model.add_module(name, layer)
+
 # set up gpu/cpu
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
