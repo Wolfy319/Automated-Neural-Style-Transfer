@@ -29,7 +29,7 @@ class ContentLoss(nn.Module) :
     self.target = target.detach()
   
   def forward(self, input) :
-    self.loss = F.l1_loss(input, self.target)
+    self.loss = F.mse_loss(input, self.target)
     return input
 
 # normalizes an input to fit the vgg19 model
@@ -71,6 +71,10 @@ def GramMatrix(input) :
   gram = torch.mm(input, input.t())
   return gram.div(a*b*c*d)
 
+def get_input_optimizer(input_img):
+    optimizer = optim.LBFGS([input_img])
+    return optimizer
+
 def buildModel(cnn, mean, std, contentImage, styleImage, contentLayers, styleLayers) :
   cnn = cnn
   # initialize empty model and add normalization layer
@@ -111,6 +115,7 @@ def buildModel(cnn, mean, std, contentImage, styleImage, contentLayers, styleLay
       name = "style_loss_{}".format(i)
       target = model(styleImage).detach()
       styleLoss = StyleLoss(target)
+      styleLosses.append(styleLoss)
       model.add_module(name, styleLoss)
 
     # find the last loss module
@@ -124,49 +129,52 @@ def buildModel(cnn, mean, std, contentImage, styleImage, contentLayers, styleLay
     return model, contentLosses, styleLosses
 
   
-def runModel(inputImg, contentImg, styleImg, contentLayers, styleLayers, numSteps, styleWeight, contentWeight) :
+def runModel(inputImg, contentImg, styleImg, contentLayers, styleLayers, numSteps = 300, styleWeight=1000000, contentWeight=1) :
   # build nst model
   model, cLosses, sLosses = buildModel(cnn, cnn_normalization_mean, cnn_normalization_std, contentImg, styleImg, contentLayers, styleLayers)
   model.requires_grad_(False)
   inputImg.requires_grad_(True)
 
   # initialize optimizer
-  optimizer = optim.Adam([inputImg])
+  optimizer = get_input_optimizer(inputImg)
 
   # "training" loop
-  for step in range(numSteps) :
-    with torch.no_grad() :
-      inputImg.clamp_(0,1)
+  step = [0]
+  while step[0] <= numSteps :
+    def closure() :
+      with torch.no_grad() :
+        inputImg.clamp_(0,1)
 
-    optimizer.zero_grad()
-    # put input through model
-    model(inputImg)
+      optimizer.zero_grad()
+      # put input through model
+      model(inputImg)
 
-    totalContentLoss = 0
-    totalStyleLoss = 0
+      totalContentLoss = 0
+      totalStyleLoss = 0
 
-    # sum the total content and style loss, and factor in weights
-    for cLoss in cLosses :
-      totalContentLoss += cLoss.loss
-    for sLoss in sLosses :
-      totalStyleLoss += sLoss.loss
+      # sum the total content and style loss, and factor in weights
+      for cLoss in cLosses :
+        totalContentLoss += cLoss.loss
+      for sLoss in sLosses :
+        totalStyleLoss += sLoss.loss
 
-    totalContentLoss *= contentWeight
-    totalStyleLoss *= styleWeight
+      totalContentLoss *= contentWeight
+      totalStyleLoss *= styleWeight
 
-    totalLoss = totalContentLoss + totalStyleLoss
-    totalLoss.backward()
+      totalLoss = totalContentLoss + totalStyleLoss
+      totalLoss.backward()
 
-    # output progress
-    step += 1
-    if step % 50 == 0 :
-      print("Step {}".format(step))
-      print('Style Loss : {:4f} Content Loss: {:4f}'.format(
-                    totalStyleLoss.item(), totalContentLoss.item()))
-      print()
+      # output progress
+      step += 1
+      if step % 50 == 0 :
+        print("Step {}".format(step))
+        print('Style Loss : {:4f} Content Loss: {:4f}'.format(
+                      totalStyleLoss.item(), totalContentLoss.item()))
+        print()
+      return totalContentLoss + totalStyleLoss
 
     # optimize
-    optimizer.step(totalLoss)
+    optimizer.step(closure())
 
   with torch.no_grad() :
     inputImg.clamp_(0,1)
@@ -191,8 +199,7 @@ styleLayers = ["conv_1_1", "conv_2_1", "conv_3_1", "conv_4_1", "conv_5_1"]
 style_img = image_loader("/content/points.jpg")
 content_img = image_loader("/content/bird.jpg")
 inputImg = content_img.clone()
-
-output = runModel(inputImg, content_img, style_img, contentLayers, styleLayers, numSteps=300, styleWeight=1000000, contentWeight=1)
+output = runModel(inputImg, content_img, style_img, contentLayers, styleLayers, numSteps=300)
 
 plt.ion()
 
