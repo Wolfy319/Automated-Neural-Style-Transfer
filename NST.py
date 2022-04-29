@@ -1,2 +1,2 @@
-# Copyright (c) 2022 Jonathan Fiorini
+# Copyright (c) 2022 Wolfy Fiorini
 # All rights reserved
