@@ -10,7 +10,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
 
-
+class Normalization(nn.Module) :
+  def __init__(self, mean, std) :
+    super(Normalization, self).__init__()
+    self.mean = torch.tensor(mean).view(-1,1,1)
+    self.std = torch.tensor(std).view(-1,1,1)
+	
 class ContentLoss(nn.Module) :
   def __init__(self, target) :
     super(ContentLoss, self).__init__()
