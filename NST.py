@@ -16,6 +16,19 @@ import torchvision.models as models
 
 import copy
 
+def image_loader(image_name):
+    image = Image.open(image_name)
+    # fake batch dimension required to fit network's input dimensions
+    image = loader(image).unsqueeze(0)
+    return image.to(device, torch.float)
+
+def imshow(input, title) :
+  image = input.cpu().clone()
+  image = image.squeeze(0)
+  image = transforms.ToPILImage(image)
+  plt.imshow(image)
+  plt.title(title)
+  
 # set up gpu/cpu
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -33,21 +46,26 @@ print(cnn)
 for child in cnn :
   print(child)
 
-imsize = 512 if torch.cuda.is_available() else 128 
+imWidth = 800 if torch.cuda.is_available() else 180  
+imHeight = 600 if torch.cuda.is_available() else 135
 
 # scales input and converts to tensor
 loader = transforms.Compose([
-    transforms.Resize(imsize),  
+    transforms.Resize((imHeight, imWidth)),  
     transforms.ToTensor()])  
 
-def image_loader(image_name):
-    image = Image.open(image_name)
-    # fake batch dimension required to fit network's input dimensions
-    image = loader(image).unsqueeze(0)
-    return image.to(device, torch.float)
 
 
-style_img = image_loader("./data/images/neural-style/picasso.jpg")
-content_img = image_loader("./data/images/neural-style/dancing.jpg")
+
+style_img = image_loader("/content/crazy.jpg")
+content_img = image_loader("/content/mountains.jpg")
 
 
+
+plt.figure()
+imshow(style_img, "style")
+plt.pause(0.01)
+
+plt.figure()
+imshow(content_img, "content")
+plt.pause(0.01)
