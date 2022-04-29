@@ -24,7 +24,7 @@ def forward(self, img) :
 
     return (img - self.mean) / self.std
 
-	
+
 class ContentLoss(nn.Module) :
   def __init__(self, target) :
     super(ContentLoss, self).__init__()
@@ -34,6 +34,18 @@ class ContentLoss(nn.Module) :
     self.loss = F.mse_loss(input, self.target)
     return input
 
+class StyleLoss(nn.Module) :
+  def __init__(self, target) :
+    super(StyleLoss, self).__init__()
+    self.target = GramMatrix(target).detach()
+
+  def forward(self, input) :
+    G = GramMatrix(input)
+    self.loss = F.mse_loss(G, self.target)
+    return input
+
+def GramMatrix(input) :
+	return 
 
 def imageLoader(imageName):
   image = Image.open(imageName)
