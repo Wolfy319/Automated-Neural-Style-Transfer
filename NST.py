@@ -5,6 +5,7 @@
 
 import os
 from datetime import datetime
+import random
 from torchvision.transforms.functional import normalize
 import torch
 import torchvision.models as models
@@ -67,6 +68,8 @@ def create_results_folder(optim, steps, style_layers, content_layers, lr, style_
 	style.save(results_folder + "/_Style-Image.jpg")
 	content.save(results_folder + "/_Content-Image.jpg")
 	return results_folder
+
+
 
 content_name = "AI/Content/noise2.jpg"
 style_name = "AI/Style/smiley4.jpg"
@@ -166,19 +169,25 @@ def get_model_and_losses(vgg, content_image, style_image, content_layers, style_
 
 
 def run_nst(vgg, content_image, style_image, input_image, content_layers, style_layers, content_weight, style_weight, steps, learn_rate, numupdate, numimg):
-	results_folder = create_results_folder(type(optimizer).__name__, steps, vgg_default_style_layers, vgg_default_content_layers,
-											learn_rate, style_weight, content_weight, style_image, content_image)
-  # initialize model
+	# initialize model
 	nst, content_losses, style_losses = get_model_and_losses(
 		vgg, content_image, style_image, content_layers, style_layers)
 	nst.requires_grad_(False)
 	optimizer = optim.Adam([input_image.requires_grad_(True)], lr=learn_rate)
-	results_folder = os.getcwd() + "/results/"
-	
+	results_folder = create_results_folder(type(optimizer).__name__, steps, vgg_default_style_layers, vgg_default_content_layers,
+											learn_rate, style_weight, content_weight, style_image, content_image)
+	transforms.RandomPerspective()
+	_,_,h,w = input_image.data.size()
+	randomize = transforms.Compose([
+		transforms.RandomRotation(1),
+		transforms.Resize((h, w))
+	])
 	# training loop
 	for step in range(steps):
 		input_image.data.clamp(0, 1)
 		_,_,h,w = input_image.data.size()
+		# if h == imgHeight and w == imgWidth :
+		# 	input_image = randomize(input_image)
 		nst(input_image)
 		content_loss = style_loss = 0
 		for item in content_losses:
@@ -195,6 +204,7 @@ def run_nst(vgg, content_image, style_image, input_image, content_layers, style_
 				step, steps, total_loss, style_loss, content_loss))
 			
 		if step % (steps // numimg) == 0 or step == 0:
+			# current_image = unnormal(input_image.to(device).clone())
 			current_image = imfit(input_image.to(device).clone())
 			name = results_folder + "/Step_{}.jpg".format(step)
 			current_image = current_image.save(name)
