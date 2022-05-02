@@ -60,57 +60,12 @@ def imfit(input):
 	return image
 
 def create_results_folder(pathname) :
-	# now = datetime.now().strftime("%H-%M-%S")
 	path = "/" + pathname
 	dir = os.getcwd()
 	results_folder = dir + path
 	os.makedirs(results_folder)
 	os.makedirs(results_folder + "/Video")
-	# filename = os.path.join(results_folder, "run_parameters.txt")
-	# f = open(filename, 'a')
-	# f.write("Parameters for this run:\n" + 
-	# 		"Number of steps = " + str(steps) + ", " + 
-	# 		"Optimizer used: " + optim + ", learning rate =" + str(lr) + "\n" + 
-	# 		"Weights used: content_weight = " + str(content_weight) + ", style_weight = " + str(style_weight) + "\n" +
-	# 		"Style layer(s) used: " + str(style_layers) + "\n" +
-	# 		"Content layer(s) used: " + str(content_layers) + "\n"+
-	# 		"Content image = " + content_name + ", Style image = " + style_name)
-	# f.close()
-	# style = imfit(style_image)
-	# content = imfit(content_image)
-	# style.save(results_folder + "/_Style-Image.jpg")
-	# content.save(results_folder + "/_Content-Image.jpg")
 	return results_folder
-
-# def create_process_folder() :
-# 	now = datetime.now().strftime("%H-%M-%S")
-# 	curr_time = "/Postprocess/Results-" + str(run)
-# 	dir = os.getcwd()
-# 	results_folder = dir + curr_time
-# 	os.makedirs(results_folder)
-# 	return results_folder
-	
-
-
-
-# content_name = "Content/sign.jpg"
-# style_name = "Style/5.jpg"
-# content_image = imageLoader(content_name)
-# style_image = imageLoader(style_name)
-
-# input_image = content_image.clone().to(device)
-
-# content = imfit(content_image)
-# style = imfit(style_image)
-# fig, (ax1, ax2) = plt.subplots(1, 2)
-# ax1.set_title("content")
-# ax1.imshow(content)
-# ax2.set_title("style")
-# ax2.imshow(style)
-# plt.show()
-# plt.pause(0.01)
-
-
 
 class Normalizer(nn.Module):
 	def __init__(self):
