@@ -1,3 +1,8 @@
+###
+# Copyright 2022 Wolfy Fiorini
+# All rights reserved
+###
+
 import requests
 from PIL import Image
 from PIL import ImageFilter

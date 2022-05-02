@@ -1,15 +1,16 @@
-from importlib.resources import path
+###
+# Copyright 2022 Wolfy Fiorini
+# All rights reserved
+###
+
 import os
-from datetime import datetime
 from torchvision.transforms.functional import normalize
 import torch
 import torchvision.models as models
 import torchvision.transforms as transforms
 from PIL import Image
 from PIL import ImageOps
-import matplotlib.pyplot as plt
 import torch.nn as nn
-from torch.nn.modules.activation import ReLU
 import torch.optim as optim
 import torch.nn.functional as F
 import myconfig as config
