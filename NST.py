@@ -1,27 +1,25 @@
-###
-# Copyright (c) 2022 Wolfy Fiorini
-# All rights reserved
-##
-
+from importlib.resources import path
 import os
 from datetime import datetime
-import random
 from torchvision.transforms.functional import normalize
 import torch
 import torchvision.models as models
 import torchvision.transforms as transforms
 from PIL import Image
+from PIL import ImageOps
 import matplotlib.pyplot as plt
 import torch.nn as nn
 from torch.nn.modules.activation import ReLU
 import torch.optim as optim
 import torch.nn.functional as F
-from PIL import ImageOps
+import myconfig as config
+
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-imgWidth = 800 if device == "cuda" else 512
-imgHeight = 600 if device == "cuda" else 512
+imgWidth = 600 if device == "cuda" else 640
+imgHeight = 600 if device == "cuda" else 480
 
+vgg_model = models.vgg19(pretrained=True).features.to(device).eval()
 vggNormalizationMean = torch.tensor(
 	[0.485, 0.456, 0.406]).to(device).view(-1, 1, 1)
 vggNormalizationStd = torch.tensor(
@@ -31,19 +29,21 @@ vgg_default_content_layers = ['relu3_2']
 vgg_default_style_layers = [
 	'relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1']
 
-lr = 0.07
-steps = 300
-style_weight = 1e9
-content_weight = 0
-numupdates = 50
-numimg = 10
+lr = config.lr
+steps = config.steps
+style_weight = config.style_weight
+content_weight = config.content_weight
+numupdate = config.numupdates
+numimg = config.numimg
+
+
 
 loader = transforms.Compose([
 	transforms.ToTensor()
 ]
 )
 unloader = transforms.ToPILImage()
-	
+
 
 def imageLoader(imageName):
 	image = Image.open(imageName)
@@ -59,36 +59,57 @@ def imfit(input):
 	image = unloader(image)
 	return image
 
-
-def unnormal(input):
-	return (input - vggNormalizationMean) / vggNormalizationStd
-
-def create_results_folder(optim, steps, style_layers, content_layers, lr, style_weight, content_weight, style_image, content_image) :
-	now = datetime.now().strftime("%H-%M-%S")
-	curr_time = "/AI/Output/Results-"+now
+def create_results_folder(pathname) :
+	# now = datetime.now().strftime("%H-%M-%S")
+	path = "/" + pathname
 	dir = os.getcwd()
-	results_folder = dir + curr_time
+	results_folder = dir + path
 	os.makedirs(results_folder)
+	os.makedirs(results_folder + "/Video")
+	# filename = os.path.join(results_folder, "run_parameters.txt")
+	# f = open(filename, 'a')
+	# f.write("Parameters for this run:\n" + 
+	# 		"Number of steps = " + str(steps) + ", " + 
+	# 		"Optimizer used: " + optim + ", learning rate =" + str(lr) + "\n" + 
+	# 		"Weights used: content_weight = " + str(content_weight) + ", style_weight = " + str(style_weight) + "\n" +
+	# 		"Style layer(s) used: " + str(style_layers) + "\n" +
+	# 		"Content layer(s) used: " + str(content_layers) + "\n"+
+	# 		"Content image = " + content_name + ", Style image = " + style_name)
+	# f.close()
+	# style = imfit(style_image)
+	# content = imfit(content_image)
+	# style.save(results_folder + "/_Style-Image.jpg")
+	# content.save(results_folder + "/_Content-Image.jpg")
 	return results_folder
 
+# def create_process_folder() :
+# 	now = datetime.now().strftime("%H-%M-%S")
+# 	curr_time = "/Postprocess/Results-" + str(run)
+# 	dir = os.getcwd()
+# 	results_folder = dir + curr_time
+# 	os.makedirs(results_folder)
+# 	return results_folder
+	
 
 
-content_name = "AI/Content/noise2.jpg"
-style_name = "AI/Style/smiley4.jpg"
-content_image = imageLoader(content_name)
-style_image = imageLoader(style_name)
 
-input_image = content_image.clone().to(device)
+# content_name = "Content/sign.jpg"
+# style_name = "Style/5.jpg"
+# content_image = imageLoader(content_name)
+# style_image = imageLoader(style_name)
 
-content = imfit(content_image)
-style = imfit(style_image)
-fig, (ax1, ax2) = plt.subplots(1, 2)
-ax1.set_title("content")
-ax1.imshow(content)
-ax2.set_title("style")
-ax2.imshow(style)
-plt.show()
-plt.pause(0.01)
+# input_image = content_image.clone().to(device)
+
+# content = imfit(content_image)
+# style = imfit(style_image)
+# fig, (ax1, ax2) = plt.subplots(1, 2)
+# ax1.set_title("content")
+# ax1.imshow(content)
+# ax2.set_title("style")
+# ax2.imshow(style)
+# plt.show()
+# plt.pause(0.01)
+
 
 
 class Normalizer(nn.Module):
@@ -129,6 +150,8 @@ class ContentLoss(nn.Module):
 	def forward(self, input):
 		self.loss = F.l1_loss(self.target, input)
 		return input
+
+
 
 
 def get_model_and_losses(vgg, content_image, style_image, content_layers, style_layers):
@@ -205,8 +228,16 @@ def run_nst(content_image, style_image, input_image, iter, pathname, interp):
 				current_image = imfit(input_image.to(device).clone())
 				name = pathname + "/Style{}-0.jpg".format(iter + 1)
 				current_image = current_image.save(name)
-				files.append(name)		
+				files.append(name)
+
+
+
+
+			
 	return files
+
+
+
 
 def run_styles(temp_folder, files, fr, content) :
 	print("here")
@@ -241,21 +272,3 @@ def run_interp(temp, files) :
 
 
 	return new_list
-
-
-
-output = run_nst(vgg, content_image, style_image, input_image, vgg_default_content_layers,
-				 vgg_default_style_layers, content_weight, style_weight, steps, lr, numupdates, numimg)
-
-output = output.save("style")
-# current_image = unnormal(output.to(device).clone())
-current_image = imfit(output.to(device).clone())
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
-ax1.set_title("content")
-ax1.imshow(content)
-ax2.set_title("style")
-ax2.imshow(style)
-ax3.set_title("result")
-ax3.imshow(current_image)
-plt.show()
-plt.pause(0.01)
