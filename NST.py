@@ -22,6 +22,22 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 imgWidth = 800 if device == "cuda" else 512
 imgHeight = 600 if device == "cuda" else 512
 
+vggNormalizationMean = torch.tensor(
+	[0.485, 0.456, 0.406]).to(device).view(-1, 1, 1)
+vggNormalizationStd = torch.tensor(
+	[0.229, 0.224, 0.225]).to(device).view(-1, 1, 1)
+
+vgg_default_content_layers = ['relu3_2']
+vgg_default_style_layers = [
+	'relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1']
+
+lr = 0.07
+steps = 300
+style_weight = 1e9
+content_weight = 0
+numupdates = 50
+numimg = 10
+
 loader = transforms.Compose([
 	transforms.ToTensor()
 ]
@@ -150,26 +166,18 @@ def get_model_and_losses(vgg, content_image, style_image, content_layers, style_
 	return model, content_losses, style_losses
 
 
-def run_nst(vgg, content_image, style_image, input_image, content_layers, style_layers, content_weight, style_weight, steps, learn_rate, numupdate, numimg):
+def run_nst(content_image, style_image, input_image, iter, pathname, interp):
 	# initialize model
 	nst, content_losses, style_losses = get_model_and_losses(
-		vgg, content_image, style_image, content_layers, style_layers)
+		vgg_model, content_image, style_image, vgg_default_content_layers, vgg_default_style_layers)
 	nst.requires_grad_(False)
-	optimizer = optim.Adam([input_image.requires_grad_(True)], lr=learn_rate)
-	results_folder = create_results_folder(type(optimizer).__name__, steps, vgg_default_style_layers, vgg_default_content_layers,
-											learn_rate, style_weight, content_weight, style_image, content_image)
-	transforms.RandomPerspective()
-	_,_,h,w = input_image.data.size()
-	randomize = transforms.Compose([
-		transforms.RandomRotation(1),
-		transforms.Resize((h, w))
-	])
+	optimizer = optim.Adam([input_image.requires_grad_(True)], lr)
+	name = ""
+	iter *= numimg
+	files = []
 	# training loop
 	for step in range(steps):
 		input_image.data.clamp(0, 1)
-		_,_,h,w = input_image.data.size()
-		# if h == imgHeight and w == imgWidth :
-		# 	input_image = randomize(input_image)
 		nst(input_image)
 		content_loss = style_loss = 0
 		for item in content_losses:
@@ -178,24 +186,27 @@ def run_nst(vgg, content_image, style_image, input_image, content_layers, style_
 			style_loss += style_weight * item.loss
 		total_loss = style_loss + content_loss
 		optimizer.zero_grad()
-		total_loss.backward(retain_graph = True)
+		total_loss.backward()
 		optimizer.step()
-
 		if step % (steps // numupdate) == 0:
 			print("Step {}/{} - Total loss = {}, Style loss = {}, Content loss = {}".format(
 				step, steps, total_loss, style_loss, content_loss))
 			
-		if step % (steps // numimg) == 0 or step == 0:
-			# current_image = unnormal(input_image.to(device).clone())
-			current_image = imfit(input_image.to(device).clone())
-			name = results_folder + "/Step_{}.jpg".format(step)
-			current_image = current_image.save(name)
-			
-
-	input_image.data.clamp(0, 1)
-	result = imfit(input_image)
-	result.save(results_folder + "/Final_result.jpg")
-	return input_image
+		
+		if step % (steps // numimg) == 0:
+			if interp == True: 
+				current_image = imfit(input_image.to(device).clone())
+				frame = iter + (step // (steps // numimg))
+				name = pathname + "/Temp{}-0.jpg".format(frame + 1)
+				current_image = current_image.save(name)
+				files.append(name)
+		if step + 1 == steps :
+			if interp == False:
+				current_image = imfit(input_image.to(device).clone())
+				name = pathname + "/Style{}-0.jpg".format(iter + 1)
+				current_image = current_image.save(name)
+				files.append(name)		
+	return files
 
 def run_styles(temp_folder, files, fr, content) :
 	print("here")
@@ -231,21 +242,7 @@ def run_interp(temp, files) :
 
 	return new_list
 
-vggNormalizationMean = torch.tensor(
-	[0.485, 0.456, 0.406]).to(device).view(-1, 1, 1)
-vggNormalizationStd = torch.tensor(
-	[0.229, 0.224, 0.225]).to(device).view(-1, 1, 1)
 
-vgg_default_content_layers = ['relu3_2']
-vgg_default_style_layers = [
-	'relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1']
-
-lr = 0.07
-steps = 300
-style_weight = 1e9
-content_weight = 0
-numupdates = 50
-numimg = 10
 
 output = run_nst(vgg, content_image, style_image, input_image, vgg_default_content_layers,
 				 vgg_default_style_layers, content_weight, style_weight, steps, lr, numupdates, numimg)
