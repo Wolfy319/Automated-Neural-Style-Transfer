@@ -115,10 +115,6 @@ class ContentLoss(nn.Module):
 		return input
 
 
-
-vgg = models.vgg19(pretrained=True).features.to(device).eval()
-
-
 def get_model_and_losses(vgg, content_image, style_image, content_layers, style_layers):
 	model = nn.Sequential(Normalizer())
 	content_losses, style_losses = [], []
@@ -140,7 +136,6 @@ def get_model_and_losses(vgg, content_image, style_image, content_layers, style_
 		model.add_module(name, layer)
 		if name in c_layers_copy:
 			content_loss = ContentLoss(model(content_image))
-			print(content_loss)
 			model.add_module("contentloss{}".format(i), content_loss)
 			content_losses.append(content_loss)
 			c_layers_copy.remove(name)
