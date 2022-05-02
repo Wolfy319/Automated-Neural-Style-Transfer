@@ -115,6 +115,7 @@ class ContentLoss(nn.Module):
 		return input
 
 
+
 vgg = models.vgg19(pretrained=True).features.to(device).eval()
 
 
