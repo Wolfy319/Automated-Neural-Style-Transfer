@@ -1,8 +1,8 @@
 import glob
 import shutil
 import NST
+import Process
 import os
-from threading import Timer
 from PIL import Image
 import myconfig as prefs
 
@@ -49,6 +49,49 @@ def remove_files(remove, num_styles, style_frames) :
 			print("The file does not exist")
 	return num_styles, style_frames
 
+def interpolate(input_files) :
+	print("Interpolating... ")
+	files = NST.run_interp(temp_folder, input_files)
+	targets = get_interp_targets(input_files, files)
+	files = Process.fade(targets, fr//num_styles, files)
+	print("\n\n\n")
+	print("Renaming files...")
+	files = rename_files(temp_folder, fr, files, False)
+	return files
+
+def get_interp_targets(style_frames, files) :
+	print("\nGetting style files")
+	interp_targets = {}
+	for i in range(len(style_frames)) :
+		frame_number = files.index(style_frames[i])
+		style_frame = style_frames[i]
+		if(i == 0) : 
+			previous_frame = files[(len(files) - 1)]
+		else :
+			previous_frame = files[frame_number - 1]
+		interp_targets[style_frame] = previous_frame
+	return interp_targets
+
+def upscale_imgs(files) :
+	print("Upscaling images... ")
+	for i, file in enumerate(files) :
+		out = results_folder + "/Frame{}.jpg".format(i)
+		Process.process(file, out)
+		print("Frame{}.jpg finished".format(i))
+
+def generate_video():
+	print("Generating video... ")
+	loops = (duration * fr) // len(files)
+	os.chdir(results_folder)
+
+	for i in range(loops) :
+		ffmpeg = "ffmpeg -framerate " + str(fr) + " -i Frame%d.jpg -c:v libx264 "+ out_name + "{}.mp4".format(i) 
+		os.system(ffmpeg)
+
+
+	os.system("(for %i in (*.mp4) do @echo file '%i') > mylist.txt")
+	ffmpeg = "ffmpeg -f concat -safe 0 -i mylist.txt -c copy "+ out_name + ".mp4"
+	os.system(ffmpeg)
 
 
 content_img = "Content/" + input("Enter name of content image - ") + ".jpg"
@@ -67,7 +110,6 @@ else :
 temp_folder = NST.create_results_folder("temp")
 style_path = "Style/" + input("Enter style folder - ") + "/"
 style_files = input("Enter style files - ")
-
 if style_files != "" :
 	style_files = style_files.split(" ")
 	for i, file in enumerate(style_files) :
@@ -84,23 +126,15 @@ duration =  prefs.duration
 
 img_for_dim = Image.open(content_img)
 ratio = img_for_dim.width / img_for_dim.height
-
+NST.imgWidth = 1000
+NST.imgHeight = int(NST.imgWidth / ratio // 1)
 
 print("Transferring styles... ")
 files = NST.run_styles(temp_folder, style_files, fr, content_img)
-remove_string = input("Enter file number of any styles you would like to delete - ")
-if not remove_string == "" :
-	remove = remove_string.split(" ")
-	num_styles, files = remove_files(remove, num_styles, files)
 
 files = rename_files(temp_folder, fr, files, True)
+upscale_imgs(files)
 
 
-files = NST.run_interp(temp_folder, num_styles, form, fr, files, steps)
-style_frame_files[files[len(files) - 1]] = temp_folder + "/Temp1-0.jpg"
-print("Renaming files...")
-rename_files(temp_folder, fr, False)
-files = glob.glob(temp_folder + "/*.jpg")
-files.sort(key = my)
-input(".......")
+
 
