@@ -53,20 +53,6 @@ def create_results_folder(optim, steps, style_layers, content_layers, lr, style_
 	dir = os.getcwd()
 	results_folder = dir + curr_time
 	os.makedirs(results_folder)
-	filename = os.path.join(results_folder, "run_parameters.txt")
-	f = open(filename, 'a')
-	f.write("Parameters for this run:\n" + 
-			"Number of steps = " + str(steps) + ", " + 
-			"Optimizer used: " + optim + ", learning rate =" + str(lr) + "\n" + 
-			"Weights used: content_weight = " + str(content_weight) + ", style_weight = " + str(style_weight) + "\n" +
-			"Style layer(s) used: " + str(style_layers) + "\n" +
-			"Content layer(s) used: " + str(content_layers) + "\n"+
-			"Content image = " + content_name + ", Style image = " + style_name)
-	f.close()
-	style = imfit(style_image)
-	content = imfit(content_image)
-	style.save(results_folder + "/_Style-Image.jpg")
-	content.save(results_folder + "/_Content-Image.jpg")
 	return results_folder
 
 
