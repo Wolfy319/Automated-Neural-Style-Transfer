@@ -197,6 +197,39 @@ def run_nst(vgg, content_image, style_image, input_image, content_layers, style_
 	result.save(results_folder + "/Final_result.jpg")
 	return input_image
 
+def run_styles(temp_folder, files, fr, content) :
+	print("here")
+	out_files = []
+	for i in range(len(files)) :
+		file = files[i]
+		style_image = imageLoader(file)
+		content_image = imageLoader(content)
+		input_image = content_image.clone().to(device)
+		out = run_nst(content_image, style_image, input_image, i, temp_folder, False)
+		out_files.extend(out)
+	return out_files
+
+	
+
+def run_interp(temp, files) :
+	new_list = []
+	numfiles = len(files)
+	for i in range(numfiles) :
+		new_list.append(files[i])
+		if i == numfiles - 1 :
+			im1 = imageLoader(files[i])
+			im2 = imageLoader(files[0])
+		else :
+			im1 = imageLoader(files[i])
+			im2 = imageLoader(files[i + 1])
+		content_image = im2.clone().to(device)
+		input_image = im1.clone().to(device)
+		imgnames = run_nst(content_image, content_image, input_image, i, temp, True)
+		for name in imgnames :
+			new_list.append(name)
+
+
+	return new_list
 
 vggNormalizationMean = torch.tensor(
 	[0.485, 0.456, 0.406]).to(device).view(-1, 1, 1)
