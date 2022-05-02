@@ -118,6 +118,7 @@ def get_model_and_losses(vgg, content_image, style_image, content_layers, style_
 	i = j = 1
 	for k, (name, layer) in enumerate(vgg.named_children()):
 		if isinstance(layer, nn.Conv2d):
+			print(layer)
 			name = "conv{}_{}".format(i, j)
 			j += 1
 		elif isinstance(layer, nn.ReLU):
