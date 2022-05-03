@@ -1,6 +1,6 @@
-lr = 0.01
+lr = 0.03
 steps = 500
-style_weight = 1e9
+style_weight = 100
 content_weight = 1
 timeout = 20
 fr = 20

@@ -26,9 +26,10 @@ vggNormalizationMean = torch.tensor(
 vggNormalizationStd = torch.tensor(
 	[0.229, 0.224, 0.225]).to(device).view(-1, 1, 1)
 
-vgg_default_content_layers = ['relu3_2']
+vgg_default_content_layers = ['relu4_2']
 vgg_default_style_layers = [
 	'relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1']
+style_layer_weights = {'relu1_1' : 1, 'relu2_1' : 1, 'relu3_1' : 1, 'relu4_1' : 1, 'relu5_1' : 1}
 
 lr = config.lr
 steps = config.steps
@@ -67,6 +68,12 @@ def create_results_folder(pathname) :
 	os.makedirs(results_folder)
 	os.makedirs(results_folder + "/Video")
 	return results_folder
+
+def create_noise_img(width, height) :
+	noise = 255*torch.rand(1,3,height, width).to(device)
+	noise = noise.int()
+	noise = noise.float()
+	return noise
 
 class Normalizer(nn.Module):
 	def __init__(self):
@@ -202,7 +209,8 @@ def run_styles(temp_folder, files, fr, content) :
 		file = files[i]
 		style_image = imageLoader(file)
 		content_image = imageLoader(content)
-		input_image = content_image.clone().to(device)
+		b,c,h,w = content_image.data.size()
+		input_image = torch.randn((b,c,h,w), device = device) * 0.01
 		out = run_nst(content_image, style_image, input_image, i, temp_folder, False)
 		out_files.extend(out)
 	return out_files
