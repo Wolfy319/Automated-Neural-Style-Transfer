@@ -202,20 +202,30 @@ def run_nst(content_image, style_image, input_image, iter, pathname, interp):
 
 
 
-def run_styles(temp_folder, files, fr, content) :
+def run_styles(temp_folder, files, content) :
 	print("here")
 	out_files = []
 	for i in range(len(files)) :
 		file = files[i]
 		style_image = imageLoader(file)
 		content_image = imageLoader(content)
-		b,c,h,w = content_image.data.size()
-		input_image = torch.randn((b,c,h,w), device = device) * 0.01
+		input_image = content_image.clone().to(device)
 		out = run_nst(content_image, style_image, input_image, i, temp_folder, False)
 		out_files.extend(out)
 	return out_files
 
-	
+def run_maps(temp_folder, files, width, height) :
+	imgHeight = height
+	imgWidth = width
+	out_files = []
+	for i in range(len(files)) :
+		file = files[i]
+		style_image = imageLoader(file)
+		content_image = imageLoader(file)
+		input_image = torch.randn((1,3,imgHeight,imgWidth))
+		out = run_nst(content_image, style_image, input_image, i, temp_folder, False)
+		out_files.extend(out)
+	return out_files
 
 def run_interp(temp, files) :
 	new_list = []
