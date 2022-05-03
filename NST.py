@@ -203,7 +203,6 @@ def run_nst(content_image, style_image, input_image, iter, pathname, interp):
 
 
 def run_styles(temp_folder, files, content) :
-	print("here")
 	out_files = []
 	for i in range(len(files)) :
 		file = files[i]
