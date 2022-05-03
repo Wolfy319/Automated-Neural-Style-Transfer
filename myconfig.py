@@ -1,5 +1,6 @@
-lr = 0.01
-steps = 500
+width = 1000
+lr = 0.03
+steps = 300
 style_weight = 1e9
 content_weight = 1
 timeout = 20

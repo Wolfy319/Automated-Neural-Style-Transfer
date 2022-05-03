@@ -17,7 +17,9 @@ import myconfig as config
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-imgWidth = 600 if device == "cuda" else 640
+global imgWidth
+imgwidth = 600 if device == "cuda" else 640
+global imgHeight 
 imgHeight = 600 if device == "cuda" else 480
 
 vgg_model = models.vgg19(pretrained=True).features.to(device).eval()
@@ -26,9 +28,10 @@ vggNormalizationMean = torch.tensor(
 vggNormalizationStd = torch.tensor(
 	[0.229, 0.224, 0.225]).to(device).view(-1, 1, 1)
 
-vgg_default_content_layers = ['relu3_2']
+vgg_default_content_layers = ['relu4_2']
 vgg_default_style_layers = [
 	'relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1']
+style_layer_weights = {'relu1_1' : 1, 'relu2_1' : 1, 'relu3_1' : 1, 'relu4_1' : 1, 'relu5_1' : 1}
 
 lr = config.lr
 steps = config.steps
@@ -67,6 +70,12 @@ def create_results_folder(pathname) :
 	os.makedirs(results_folder)
 	os.makedirs(results_folder + "/Video")
 	return results_folder
+
+def create_noise_img(width, height) :
+	noise = 255*torch.rand(1,3,height, width).to(device)
+	noise = noise.int()
+	noise = noise.float()
+	return noise
 
 class Normalizer(nn.Module):
 	def __init__(self):
@@ -146,7 +155,7 @@ def get_model_and_losses(vgg, content_image, style_image, content_layers, style_
 	return model, content_losses, style_losses
 
 
-def run_nst(content_image, style_image, input_image, iter, pathname, interp):
+def run_nst(content_image, style_image, input_image, iter, content_num, pathname, interp):
 	# initialize model
 	nst, content_losses, style_losses = get_model_and_losses(
 		vgg_model, content_image, style_image, vgg_default_content_layers, vgg_default_style_layers)
@@ -183,7 +192,7 @@ def run_nst(content_image, style_image, input_image, iter, pathname, interp):
 		if step + 1 == steps :
 			if interp == False:
 				current_image = imfit(input_image.to(device).clone())
-				name = pathname + "/Style{}-0.jpg".format(iter + 1)
+				name = pathname + "/Style{}{}-0.jpg".format(content_num, iter + 1)
 				current_image = current_image.save(name)
 				files.append(name)
 
@@ -195,20 +204,36 @@ def run_nst(content_image, style_image, input_image, iter, pathname, interp):
 
 
 
+def run_styles(temp_folder, styles, content) :
+	out_files = []
+	for i in range(len(content)) :
+		img_for_dim = Image.open(content[i])
+		ratio = img_for_dim.width / img_for_dim.height
+		global imgWidth 
+		imgWidth = 1000
+		global imgHeight 
+		imgHeight = int(imgWidth / ratio // 1)
+		for j in range(len(styles)) :
+			file = styles[j]
+			style_image = imageLoader(file)
+			content_image = imageLoader(content[i])
+			input_image = content_image.clone().to(device)
+			out = run_nst(content_image, style_image, input_image, j, i, temp_folder, False)
+			out_files.extend(out)
+	return out_files
 
-def run_styles(temp_folder, files, fr, content) :
-	print("here")
+def run_maps(temp_folder, files, width, height) :
+	imgHeight = height
+	imgWidth = width
 	out_files = []
 	for i in range(len(files)) :
 		file = files[i]
 		style_image = imageLoader(file)
-		content_image = imageLoader(content)
-		input_image = content_image.clone().to(device)
+		content_image = imageLoader(file)
+		input_image = torch.randn((1,3,imgHeight,imgWidth))
 		out = run_nst(content_image, style_image, input_image, i, temp_folder, False)
 		out_files.extend(out)
 	return out_files
-
-	
 
 def run_interp(temp, files) :
 	new_list = []

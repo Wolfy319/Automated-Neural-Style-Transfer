@@ -99,7 +99,6 @@ def generate_video():
 	os.system(ffmpeg)
 
 
-content_img = "Content/" + input("Enter name of content image - ") + ".jpg"
 res_folder_name = input("Enter name of output folder - ")
 
 cwd = os.getcwd()
@@ -123,16 +122,26 @@ if style_files != "" :
 else :
 	style_files = glob.glob(style_path + "*.jpg")
 
+content_path = "Content/" + input("Enter content folder - ") + "/"
+content_files = input("Enter style files - ")
+if content_files != "" :
+	content_files = content_files.split(" ")
+	for i, file in enumerate(content_files) :
+		file_name = content_path + content_files[i] + ".jpg"
+		content_files[i] = file_name
+else :
+	content_files = glob.glob(content_path + "*.jpg")
+
 num_styles = len(style_files)
+num_content = len(content_files)
 form = "jpg"
 fr =  prefs.fr
 out_name = input("Enter output file name - ")
 duration =  prefs.duration
-img_for_dim = Image.open(content_img)
-ratio = img_for_dim.width / img_for_dim.height
-NST.imgWidth = 1000
-NST.imgHeight = int(NST.imgWidth / ratio // 1)
+
+NST.imgWidth = prefs.width
+NST.imgHeight
 print("Transferring styles... ")
-files = NST.run_styles(temp_folder, style_files, fr, content_img)
+files = NST.run_styles(temp_folder, style_files, content_files)
 files = rename_files(temp_folder, fr, files, True)
 upscale_imgs(files)
