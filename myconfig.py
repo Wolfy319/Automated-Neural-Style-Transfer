@@ -1,3 +1,4 @@
+width = 1000
 lr = 0.03
 steps = 500
 style_weight = 1e9

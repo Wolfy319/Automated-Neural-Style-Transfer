@@ -202,15 +202,19 @@ def run_nst(content_image, style_image, input_image, iter, pathname, interp):
 
 
 
-def run_styles(temp_folder, files, content) :
+def run_styles(temp_folder, styles, content) :
 	out_files = []
-	for i in range(len(files)) :
-		file = files[i]
-		style_image = imageLoader(file)
-		content_image = imageLoader(content)
-		input_image = content_image.clone().to(device)
-		out = run_nst(content_image, style_image, input_image, i, temp_folder, False)
-		out_files.extend(out)
+	for i in range(len(content)) :
+		img_for_dim = Image.open(content[i])
+		ratio = img_for_dim.width / img_for_dim.height
+		imgHeight = int(imgWidth / ratio // 1)
+		for j in range(len(styles)) :
+			file = styles[j]
+			style_image = imageLoader(file)
+			content_image = imageLoader(content[i])
+			input_image = content_image.clone().to(device)
+			out = run_nst(content_image, style_image, input_image, i, temp_folder, False)
+			out_files.extend(out)
 	return out_files
 
 def run_maps(temp_folder, files, width, height) :
