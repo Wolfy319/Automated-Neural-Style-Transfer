@@ -138,7 +138,9 @@ form = "jpg"
 fr =  prefs.fr
 out_name = input("Enter output file name - ")
 duration =  prefs.duration
+
 NST.imgWidth = prefs.width
+NST.imgHeight
 print("Transferring styles... ")
 files = NST.run_styles(temp_folder, style_files, content_files)
 files = rename_files(temp_folder, fr, files, True)

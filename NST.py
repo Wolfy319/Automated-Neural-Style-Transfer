@@ -17,7 +17,9 @@ import myconfig as config
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-imgWidth = 600 if device == "cuda" else 640
+global imgWidth
+imgwidth = 600 if device == "cuda" else 640
+global imgHeight 
 imgHeight = 600 if device == "cuda" else 480
 
 vgg_model = models.vgg19(pretrained=True).features.to(device).eval()
@@ -152,7 +154,7 @@ def get_model_and_losses(vgg, content_image, style_image, content_layers, style_
 	return model, content_losses, style_losses
 
 
-def run_nst(content_image, style_image, input_image, iter, pathname, interp):
+def run_nst(content_image, style_image, input_image, iter, content_num, pathname, interp):
 	# initialize model
 	nst, content_losses, style_losses = get_model_and_losses(
 		vgg_model, content_image, style_image, vgg_default_content_layers, vgg_default_style_layers)
@@ -189,7 +191,7 @@ def run_nst(content_image, style_image, input_image, iter, pathname, interp):
 		if step + 1 == steps :
 			if interp == False:
 				current_image = imfit(input_image.to(device).clone())
-				name = pathname + "/Style{}-0.jpg".format(iter + 1)
+				name = pathname + "/Style{}{}-0.jpg".format(content_num, iter + 1)
 				current_image = current_image.save(name)
 				files.append(name)
 
@@ -201,19 +203,21 @@ def run_nst(content_image, style_image, input_image, iter, pathname, interp):
 
 
 
-
 def run_styles(temp_folder, styles, content) :
 	out_files = []
 	for i in range(len(content)) :
 		img_for_dim = Image.open(content[i])
 		ratio = img_for_dim.width / img_for_dim.height
+		global imgWidth 
+		imgWidth = 1000
+		global imgHeight 
 		imgHeight = int(imgWidth / ratio // 1)
 		for j in range(len(styles)) :
 			file = styles[j]
 			style_image = imageLoader(file)
 			content_image = imageLoader(content[i])
 			input_image = content_image.clone().to(device)
-			out = run_nst(content_image, style_image, input_image, i, temp_folder, False)
+			out = run_nst(content_image, style_image, input_image, j, i, temp_folder, False)
 			out_files.extend(out)
 	return out_files
 
