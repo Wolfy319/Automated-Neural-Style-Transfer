@@ -210,7 +210,7 @@ def run_styles(temp_folder, styles, content) :
 		img_for_dim = Image.open(content[i])
 		ratio = img_for_dim.width / img_for_dim.height
 		global imgWidth 
-		imgWidth = 1000
+		imgWidth = 400
 		global imgHeight 
 		imgHeight = int(imgWidth / ratio // 1)
 		for j in range(len(styles)) :

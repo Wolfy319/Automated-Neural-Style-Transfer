@@ -53,7 +53,7 @@ def remove_files(remove, num_styles, style_frames) :
 		else:
 			print("The file does not exist")
 	return num_styles, style_frames
-
+p
 def interpolate(input_files) :
 	print("Interpolating... ")
 	files = NST.run_interp(temp_folder, input_files)
