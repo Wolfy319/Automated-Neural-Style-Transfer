@@ -5,7 +5,7 @@ This project was made over the course of about 2 months. At the beginning, I had
 
 # Examples:
 Content image:
-![pug](https://user-images.githubusercontent.com/60371754/221306020-ad3219bd-ebad-4eff-b305-4c26df83d3d9.jpg)
+<img src="(https://user-images.githubusercontent.com/60371754/221306020-ad3219bd-ebad-4eff-b305-4c26df83d3d9.jpg)" alt="alt text" width="100px" height="auto">
 Style image:
 ![lion](https://user-images.githubusercontent.com/60371754/221306292-71ddbc00-6c78-4290-bff8-979a395ade20.jpg)
 Result:
