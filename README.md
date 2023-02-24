@@ -5,11 +5,11 @@ This project was made over the course of about 2 months. At the beginning, I had
 
 # Examples:
 Content image:
-<img src="(https://user-images.githubusercontent.com/60371754/221306020-ad3219bd-ebad-4eff-b305-4c26df83d3d9.jpg)" alt="alt text" width="100px" height="auto">
+<img src="https://user-images.githubusercontent.com/60371754/221306020-ad3219bd-ebad-4eff-b305-4c26df83d3d9.jpg" alt="alt text" width="111" height="156">
 Style image:
-![lion](https://user-images.githubusercontent.com/60371754/221306292-71ddbc00-6c78-4290-bff8-979a395ade20.jpg)
+<img src="https://user-images.githubusercontent.com/60371754/221306292-71ddbc00-6c78-4290-bff8-979a395ade20.jpg" alt="alt text" width="100" height="100">
 Result:
-![22](https://user-images.githubusercontent.com/60371754/221306949-33b57ffa-58d6-4d59-86cc-7d6c6280f89e.jpg)
+<img src="https://user-images.githubusercontent.com/60371754/221306949-33b57ffa-58d6-4d59-86cc-7d6c6280f89e.jpg" alt="alt text" width="100" height="100">
 <br></br>
 
 Content image:
