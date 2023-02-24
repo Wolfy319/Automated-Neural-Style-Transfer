@@ -10,12 +10,11 @@ Result:<br></br>
 <img src="https://user-images.githubusercontent.com/60371754/221306949-33b57ffa-58d6-4d59-86cc-7d6c6280f89e.jpg" alt="alt text" width="555" height="780">
 <br></br>
 
-Content image:
-![wheat](https://user-images.githubusercontent.com/60371754/221307461-fb23f621-9260-48d8-95ad-c3ce7eef2712.jpg)
-Style image:
-![water-abstract-texture-number-pattern-reflection-1042640-pxhere com](https://user-images.githubusercontent.com/60371754/221308712-74c0f43d-f997-43f8-bc29-13be3537daed.jpg)
-Result:
-![Frame67](https://user-images.githubusercontent.com/60371754/221309016-383c5c67-fb40-4487-b3f1-086f80e6e57e.jpg)
+Content image:<br></br><img src="https://user-images.githubusercontent.com/60371754/221307461-fb23f621-9260-48d8-95ad-c3ce7eef2712.jpg" alt="alt text" width="350" height="200"><br></br>
+Style image:<br></br><img src="https://user-images.githubusercontent.com/60371754/221308712-74c0f43d-f997-43f8-bc29-13be3537daed.jpg" alt="alt text" width="300" height="300"><br></br>
+Result:<br></br>
+<img src="https://user-images.githubusercontent.com/60371754/221309016-383c5c67-fb40-4487-b3f1-086f80e6e57e.jpg" alt="alt text" width="350" height="200">
+<br></br>
 
 # How to run
 To run this application, you'll need to have Python installed on your computer, and an IDE to run the code. In addition, you'll need to install PyTorch locally (instructions - https://pytorch.org/get-started/locally/#windows-installation). Once you have this, follow these steps:
