@@ -1,5 +1,6 @@
 # Automated Neural Style Transfer
-Python program to automatically generate high-res art from photos and style references. This AI model was built using PyTorch, and implements the "Neural Style Transfer" method. The reason this method was chosen was because it requires no training data at all to replicate art styles.
+*Author - Wolfy Fiorini*
+A Python program to automatically generate high-res art from photos and style references. Additionally, unlike other NST programs, this program generates images in batches and results in high resolution images. Furthermore, these batches can be combined into videos with interpolation between the image results using FMPEG. This AI model was built using PyTorch, and implements the "Neural Style Transfer" method. The reason this method was chosen was because it requires no training data at all to replicate art styles.
 
 This project was made over the course of about 2 months. At the beginning, I had no knowledge of AI or even Python in general, but this project gave me a fantastic foundation!
 
