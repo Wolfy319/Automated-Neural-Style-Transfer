@@ -4,13 +4,13 @@ Python program to automatically generate high-res art from photos and style refe
 This project was made over the course of about 2 months. At the beginning, I had no knowledge of AI or even Python in general, but this project gave me a fantastic foundation!
 
 # Examples:
-Content image:   <img src="https://user-images.githubusercontent.com/60371754/221306020-ad3219bd-ebad-4eff-b305-4c26df83d3d9.jpg" alt="alt text" width="222" height="312">
-Style image:<img src="https://user-images.githubusercontent.com/60371754/221306292-71ddbc00-6c78-4290-bff8-979a395ade20.jpg" alt="alt text" width="300" height="300"><br></br>
+Content image:<br></br><img src="https://user-images.githubusercontent.com/60371754/221306020-ad3219bd-ebad-4eff-b305-4c26df83d3d9.jpg" alt="alt text" width="222" height="312">
+Style image:<br></br><img src="https://user-images.githubusercontent.com/60371754/221306292-71ddbc00-6c78-4290-bff8-979a395ade20.jpg" alt="alt text" width="300" height="300"><br></br>
 
-Result:
+Result:<br></br>
 <img src="https://user-images.githubusercontent.com/60371754/221306949-33b57ffa-58d6-4d59-86cc-7d6c6280f89e.jpg" alt="alt text" width="555" height="780">
-<br></br>
 
+<br></br>
 Content image:
 ![wheat](https://user-images.githubusercontent.com/60371754/221307461-fb23f621-9260-48d8-95ad-c3ce7eef2712.jpg)
 Style image:
